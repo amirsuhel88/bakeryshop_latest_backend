@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
+const path = require("path");
+
+
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); //for accessing public/image folder to fetch images
-
+app.use('/public', express.static(path.join(__dirname, 'public')));
 const user = require("./routes/userRoute");
 const product = require("./routes/ProductRoute");
 const cart = require("./routes/CartRoute");

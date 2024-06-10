@@ -5,7 +5,10 @@ const fuzzyset = require("fuzzyset");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
-
+const express = require("express");
+const app = express();
+app.use(express.static("public"));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 //database connection
 const db = mysql.createConnection({
   host: "localhost",
@@ -37,7 +40,8 @@ exports.addProductWithImage = catchAsyncErrors(async (req, res, next) => {
         .json({ success: false, error: "No file uploaded" });
     }
 
-    const imagePath = "/public/images/" + req.file.filename; // Assuming the images are served from a 'public' directory
+    //const imagePath = "/public/images/" + req.file.filename; // Assuming the images are served from a 'public' directory
+    const imagePath = "" + req.file.filename; // Assuming the images are served from a 'public' directory
 
     const sql =
       "INSERT INTO products(`ProductName`, `Description`, `Price`, `StockQuantity`, `CategoryName`, `image`) VALUES (?,?,?,?,?,?)";
