@@ -59,7 +59,7 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
 
       if (data.length > 0) {
         const user = data[0];
-        
+
         // Compare hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
@@ -67,13 +67,17 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
           const token = jwt.sign({ userId: user.id }, "sdsdsdsdsdsdsdsd", {
             expiresIn: "1h",
           });
-          
-          let isAdmin = false
+
+          let isAdmin = false;
           isAdmin = user.role == 1;
-          // Send the token in response
-          return res.json({ success: true, isAdmin, token: token });
+          // Send the token in response// sending user for using redux
+
+          return res.json({ success: true, isAdmin, token: token, user: user });
         } else {
-          return res.json({ success: false, message: "Incorrect password, backend" });
+          return res.json({
+            success: false,
+            message: "Incorrect password, backend",
+          });
         }
       } else {
         return res.json({ success: false, message: "User not found" });
@@ -82,6 +86,34 @@ exports.login = catchAsyncErrors(async (req, res, next) => {
   } else {
     res.json({ success: false, message: "Email and password are required" });
   }
+});
+
+//logout
+exports.logout = catchAsyncErrors(async (req, res, next) => {
+  let token = req.headers.authorization;
+
+  // Check if the token starts with "Bearer " // this
+  if (token && token.startsWith("Bearer ")) {
+    // Remove the "Bearer " prefix
+    token = token.slice(7);
+  } else {
+    return res.json({ success: false, message: "Invalid token format" });
+  }
+
+  // Verify the token
+  jwt.verify(token, "sdsdsdsdsdsdsdsd", (err, decoded) => {
+    if (err) {
+      console.error("Error verifying token:", err);
+      return res.status(401).json({ success: false, message: "Invalid token" });
+    }
+
+    // Token is valid, delete it
+    // Assuming you're using cookies for token storage
+    res.clearCookie("token");
+    
+    console.log("after deleting the token: ", token);
+    return res.json({ success: true, message: "Logged out successfully" });
+  });
 });
 
 //get user profile
