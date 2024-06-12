@@ -20,6 +20,7 @@ const db = mysql.createConnection({
 exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user.userId; // Assuming you are extracting user ID from authenticated user
   const {
+    Name, 
     Phone,
     Street,
     Address,
@@ -33,7 +34,7 @@ exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
   } = req.body;
 
   // Check if all required fields are present
-  if (!Phone || !Street || !Address || !City || !Country || !PostalCode) {
+  if (!Name || !Phone || !Street || !Address || !City || !Country || !PostalCode) {
     return res
       .status(400)
       .json({ success: false, error: "Missing required fields" });
@@ -42,13 +43,14 @@ exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
   // Construct SQL query to insert address into database
   const insertSql = `
       INSERT INTO address 
-        (UserId, Phone, Street, Address, City, Area, State, Country, PostalCode, Landmark, AlternatePhone)
+        (UserId,Name, Phone, Street, Address, City, Area, State, Country, PostalCode, Landmark, AlternatePhone)
       VALUES
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
   const values = [
     userId,
+    Name,
     Phone,
     Street,
     Address,
@@ -84,6 +86,7 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   const addressId = req.params.AddressId; // addressId is passed as a route parameter
   console.log(userId,'address: '+ addressId);
   const {
+    Name,
     Phone,
     Street,
     Address,
@@ -97,7 +100,7 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   } = req.body;
 
   // Check if all required fields are present
-  if (!Phone || !Street || !Address || !City || !Country || !PostalCode) {
+  if (!Name || !Phone || !Street || !Address || !City || !Country || !PostalCode) {
     return res
       .status(400)
       .json({ success: false, error: "Missing required fields" });
@@ -107,6 +110,7 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   const updateSql = `
     UPDATE address
     SET
+      Name =?,
       Phone = ?,
       Street = ?,
       Address = ?,
@@ -121,6 +125,7 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   `;
 
   const values = [
+    Name,
     Phone,
     Street,
     Address,
