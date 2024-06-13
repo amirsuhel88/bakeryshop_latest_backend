@@ -20,7 +20,7 @@ const db = mysql.createConnection({
 exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user.userId; // Assuming you are extracting user ID from authenticated user
   const {
-    Name, 
+    Name,
     Phone,
     Street,
     Address,
@@ -34,7 +34,15 @@ exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
   } = req.body;
 
   // Check if all required fields are present
-  if (!Name || !Phone || !Street || !Address || !City || !Country || !PostalCode) {
+  if (
+    !Name ||
+    !Phone ||
+    !Street ||
+    !Address ||
+    !City ||
+    !Country ||
+    !PostalCode
+  ) {
     return res
       .status(400)
       .json({ success: false, error: "Missing required fields" });
@@ -84,7 +92,7 @@ exports.addToAddress = catchAsyncErrors(async (req, res, next) => {
 exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   const userId = req.user.userId; // extracting user ID from authenticated user
   const addressId = req.params.AddressId; // addressId is passed as a route parameter
-  console.log(userId,'address: '+ addressId);
+  console.log(userId, "address: " + addressId);
   const {
     Name,
     Phone,
@@ -100,7 +108,15 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
   } = req.body;
 
   // Check if all required fields are present
-  if (!Name || !Phone || !Street || !Address || !City || !Country || !PostalCode) {
+  if (
+    !Name ||
+    !Phone ||
+    !Street ||
+    !Address ||
+    !City ||
+    !Country ||
+    !PostalCode
+  ) {
     return res
       .status(400)
       .json({ success: false, error: "Missing required fields" });
@@ -162,3 +178,66 @@ exports.updateAddress = catchAsyncErrors(async (req, res, next) => {
       .json({ success: true, message: "Address updated successfully" });
   });
 });
+
+// View user addresses
+exports.viewAddresses = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user.userId; // Assuming you are extracting user ID from authenticated user
+
+  // Construct SQL query to fetch addresses from the database for the given user
+  const selectSql = `
+    SELECT * FROM address 
+    WHERE UserId = ?
+  `;
+
+  // Execute the query to fetch addresses from the database
+  db.query(selectSql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching addresses:", err);
+      return res
+        .status(500)
+        .json({ success: false, error: "Failed to fetch addresses" });
+    }
+
+    // Check if any addresses were found for the user
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, error: "No addresses found for the user" });
+    }
+
+    // Addresses successfully fetched from the database
+    return res.status(200).json({ success: true, addresses: results });
+  });
+});
+
+// View all addresses for a specific user
+exports.viewAddresses = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user.userId; // Assuming you are extracting user ID from authenticated user
+
+  // Construct SQL query to fetch addresses from the database for the given user
+  const selectSql = `
+    SELECT * FROM address 
+    WHERE UserId = ?
+  `;
+
+  // Execute the query to fetch addresses from the database
+  db.query(selectSql, [userId], (err, results) => {
+    if (err) {
+      console.error('Error fetching addresses:', err);
+      return res
+        .status(500)
+        .json({ success: false, error: 'Failed to fetch addresses' });
+    }
+
+    // Check if any addresses were found for the user
+    if (results.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, error: 'No addresses found for the user' });
+    }
+
+    // Addresses successfully fetched from the database
+    return res.status(200).json({ success: true, addresses: results });
+  });
+});
+
