@@ -127,3 +127,32 @@ exports.getCartItems = catchAsyncErrors(async (req, res, next) => {
     res.status(200).json({data, totalPrice});
   });
 });
+
+
+//remove from cart
+
+exports.removeFromCart = catchAsyncErrors(async (req, res, next) => {
+  const userId = req.user.userId;
+  const productId = req.params.productId;
+
+  const cartCheckQuery = "SELECT * FROM cart WHERE userId = ? AND productId = ?";
+  db.query(cartCheckQuery, [userId, productId], (err, cartResults) => {
+    if (err) {
+      console.error("Error checking cart:", err);
+      return res.status(500).json({ success: false, error: "Database error" });
+    }
+
+    if (cartResults.length === 0) {
+      return res.status(404).json({ success: false, error: "Item not found in cart" });
+    }
+
+    const deleteCartQuery = "DELETE FROM cart WHERE userId = ? AND productId = ?";
+    db.query(deleteCartQuery, [userId, productId], (err, deleteResults) => {
+      if (err) {
+        console.error("Error deleting cart item:", err);
+        return res.status(500).json({ success: false, error: "Failed to remove item from cart" });
+      }
+      return res.status(200).json({ success: true, message: "Item removed from cart successfully" });
+    });
+  });
+});
