@@ -146,3 +146,42 @@ exports.authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+
+// // delete user
+// //delete user (soft delete)
+// exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
+//   const userId = req.user.userId;
+//   const sql = "UPDATE users SET `accountStatus` = 0 WHERE `id` = ?";
+//   db.query(sql, [userId], (err, data) => {
+//     if (err) {
+//       return res.json("Error updating account status");
+//     }
+//     return res.json({ success: true, message: "User deleted successfully" });
+//   });
+// });
+
+
+// delete user (soft delete) with admin check
+exports.deactiverUser = catchAsyncErrors(async (req, res, next) => {
+  const adminId = req.user.userId;
+  const userIdToDelete = req.body.userId;
+
+  const adminCheckSql = "SELECT role FROM users WHERE `id` = ?";
+  db.query(adminCheckSql, [adminId], (err, results) => {
+    if (err) {
+      return res.json("Error checking admin status");
+    }
+    if (results.length > 0 && results[0].role == 1) {
+    const sql = "UPDATE users SET `accountStatus` = 0 WHERE `id` = ?";
+      db.query(sql, [userIdToDelete], (err, data) => {
+        if (err) {
+          return res.json("Error updating account status");
+        }
+        return res.json({ success: true, message: "User deleted successfully" });
+      });
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized action" });
+    }
+  });
+});

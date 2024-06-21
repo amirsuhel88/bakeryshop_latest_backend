@@ -12,7 +12,7 @@ const user = require("./routes/userRoute");
 const product = require("./routes/ProductRoute");
 const cart = require("./routes/CartRoute");
 const address = require("./routes/AddressRoute");
-const order = require("./routes/orderRoute");
+const order = require("./routes/OrderRoute");
 
 
 app.use("/api/v1", user);

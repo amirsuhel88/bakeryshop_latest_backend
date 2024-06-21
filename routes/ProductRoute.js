@@ -7,6 +7,7 @@ const {
   deleteProduct,
   searchProducts,
   addProductWithImage,
+  updateProduct
 } = require("../controllers/ProductController");
 
 const router = express.Router();
@@ -20,8 +21,16 @@ router.route("/addProduct").post(addProductWithImage);
 router
   .route("/products/:ProductId")
   .get(getProductDetails)
-  .delete(deleteProduct);
-router.route("/searchProducts").get(searchProducts);
+  .delete(deleteProduct)
+  .put(updateProduct);
+  // app.get("/api/products/search", exports.searchProducts);
+  router.route("/searchproduct").get(searchProducts)
+
+
+// router.route("/searchProducts").get(searchProducts);
 //router.route("/upload").post()
+
+// router.route("products/:ProductId").put(updateProduct)
+// app.put('products/:ProductId', exports.updateProduct);
 
 module.exports = router;

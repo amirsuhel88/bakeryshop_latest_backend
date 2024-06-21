@@ -1,7 +1,7 @@
 const mysql = require("mysql");
 const catchAsyncErrors = require("../middleware/catchAsyncErrors");
 const { escape } = require("mysql");
-const fuzzyset = require("fuzzyset");
+// const fuzzyset = require("fuzzyset");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
@@ -174,53 +174,53 @@ exports.deleteProduct = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//search a product
-// Search products based on criteria (ProductName and CategoryName)
-exports.searchProducts = catchAsyncErrors(async (req, res, next) => {
-  const { keyword, category } = req.query;
-  // Build the base SQL query
-  let sql = "SELECT * FROM products WHERE 1 = 1"; // Using '1 = 1' to always start with a valid WHERE clause
+// //search a product
+// // Search products based on criteria (ProductName and CategoryName)
+// exports.searchProducts = catchAsyncErrors(async (req, res, next) => {
+//   const { keyword, category } = req.query;
+//   // Build the base SQL query
+//   let sql = "SELECT * FROM products WHERE 1 = 1"; // Using '1 = 1' to always start with a valid WHERE clause
 
-  // Prepare WHERE clause based on search parameters
-  const conditions = [];
-  const values = [];
-  if (keyword) {
-    // Search by ProductName or Description using fuzzy matching
-    const fuzzy = fuzzyset(Object.values(keyword));
-    const similarProducts = fuzzy.get(keyword, null, 0.9); // Adjust similarity threshold as needed
-    console.log(keyword);
-    if (similarProducts && similarProducts.length > 0) {
-      const similarKeywords = similarProducts.map((item) => item[1]);
-      console.log("item: " + item);
-      conditions.push(`(ProductName IN (?) OR Description IN (?))`);
-      values.push(similarKeywords, similarKeywords);
-    }
-  }
+//   // Prepare WHERE clause based on search parameters
+//   const conditions = [];
+//   const values = [];
+//   if (keyword) {
+//     // Search by ProductName or Description using fuzzy matching
+//     const fuzzy = fuzzyset(Object.values(keyword));
+//     const similarProducts = fuzzy.get(keyword, null, 0.9); // Adjust similarity threshold as needed
+//     console.log(keyword);
+//     if (similarProducts && similarProducts.length > 0) {
+//       const similarKeywords = similarProducts.map((item) => item[1]);
+//       console.log("item: " + item);
+//       conditions.push(`(ProductName IN (?) OR Description IN (?))`);
+//       values.push(similarKeywords, similarKeywords);
+//     }
+//   }
 
-  if (category) {
-    conditions.push(`CategoryName = ?`);
-    values.push(category);
-  }
+//   if (category) {
+//     conditions.push(`CategoryName = ?`);
+//     values.push(category);
+//   }
 
-  // Concatenate conditions to the base SQL query
-  if (conditions.length > 0) {
-    sql += ` AND ${conditions.join(" AND ")}`;
-  }
+//   // Concatenate conditions to the base SQL query
+//   if (conditions.length > 0) {
+//     sql += ` AND ${conditions.join(" AND ")}`;
+//   }
 
-  // Execute the SQL query with prepared values
-  db.query(sql, values, (err, data) => {
-    if (err) {
-      console.error("Error searching products:", err);
-      return res.status(500).json({ error: "Product search failed" });
-    }
+//   // Execute the SQL query with prepared values
+//   db.query(sql, values, (err, data) => {
+//     if (err) {
+//       console.error("Error searching products:", err);
+//       return res.status(500).json({ error: "Product search failed" });
+//     }
 
-    if (data.length === 0) {
-      return res.status(404).json({ message: "No matching products found" });
-    }
-    console.log(data);
-    return res.json(data);
-  });
-});
+//     if (data.length === 0) {
+//       return res.status(404).json({ message: "No matching products found" });
+//     }
+//     console.log(data);
+//     return res.json(data);
+//   });
+// });
 
 //filter
 // Middleware function for filtering products
@@ -268,4 +268,90 @@ const filterProducts = catchAsyncErrors(async (req, res, next) => {
   });
 });
 
-//add product ===>>>for admin only
+//update product
+// Update product details
+exports.updateProduct = catchAsyncErrors(async (req, res, next) => {
+  upload(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err });
+    }
+
+    const { ProductId } = req.params;
+    const { ProductName, Description, Price, StockQuantity, CategoryName } = req.body;
+    
+    // Base query
+    let sql = `UPDATE products SET `;
+    const values = [];
+    
+    if (ProductName) {
+      sql += 'ProductName = ?, ';
+      values.push(ProductName);
+    }
+    if (Description) {
+      sql += 'Description = ?, ';
+      values.push(Description);
+    }
+    if (Price) {
+      sql += 'Price = ?, ';
+      values.push(Price);
+    }
+    if (StockQuantity) {
+      sql += 'StockQuantity = ?, ';
+      values.push(StockQuantity);
+    }
+    if (CategoryName) {
+      sql += 'CategoryName = ?, ';
+      values.push(CategoryName);
+    }
+    if (req.file) {
+      const imagePath = req.file.filename;
+      sql += 'image = ?, ';
+      values.push(imagePath);
+    }
+    
+    // Remove last comma and add WHERE clause
+    sql = sql.slice(0, -2) + ' WHERE ProductId = ?';
+    values.push(ProductId);
+
+    db.query(sql, values, (err, data) => {
+      if (err) {
+        console.error('Error updating product:', err);
+        return res.status(500).json({ success: false, error: 'Product update failed' });
+      }
+      if (data.affectedRows === 0) {
+        return res.status(404).json({ success: false, error: 'Product not found' });
+      }
+      return res.status(200).json({ success: true, message: 'Product updated successfully', data });
+    });
+  });
+});
+
+
+// search products
+exports.searchProducts = catchAsyncErrors(async (req, res, next) => {
+  const page = parseInt(req.query.page) || 1; // Current page, default is 1
+  const limit = parseInt(req.query.limit) || 10; // Number of items per page, default is 10
+  const offset = (page - 1) * limit; // Offset calculation
+
+  const searchTerm = req.query.q; // Search term from query parameter
+
+  if (!searchTerm) {
+    return res.status(400).json({ success: false, error: "No search term provided" });
+  }
+
+  // SQL query with search and pagination
+  const sql = `
+    SELECT * FROM products 
+    WHERE ProductName LIKE ? OR Description LIKE ? OR CategoryName LIKE ?
+    LIMIT ? OFFSET ?
+  `;
+  const values = [`%${searchTerm}%`, `%${searchTerm}%`, `%${searchTerm}%`, limit, offset];
+
+  db.query(sql, values, (err, data) => {
+    if (err) {
+      console.error("Error searching products:", err);
+      return res.status(500).json({ success: false, error: "Error searching products" });
+    }
+    return res.status(200).json({ success: true, data });
+  });
+});
